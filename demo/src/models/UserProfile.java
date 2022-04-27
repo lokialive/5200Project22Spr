@@ -105,7 +105,7 @@ public class UserProfile {
         try (CallableStatement statement = conn.prepareCall("{call edit_profile_birth(?,?)}");) {
 
             statement.setInt(1, userId);
-            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+            SimpleDateFormat formatter = new SimpleDateFormat("MM-dd-yyyy");
             statement.setString(2, formatter.format(birth));
             statement.execute();
             statement.close();

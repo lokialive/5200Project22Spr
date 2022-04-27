@@ -1,11 +1,10 @@
 package com.company;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
+import java.util.Calendar;
+
 import models.Bookmark;
 import models.Order;
 import models.Review;
@@ -45,6 +44,8 @@ public class Main {
                 boolean login = false;
                 // edit
                 // 调用recusor得到结果集，判断是否匹配
+                if(User.userExist(conn,userName,password)) login=true;
+
                 if (login) {
                     //edit
                     //获得这个user包括id （get user by username ）
@@ -60,12 +61,15 @@ public class Main {
                 String newName = Update.getInput();
                 System.out.println("Please enter password");
                 String newPassword = Update.getInput();
-                User.userInsert(conn, newName, newPassword);
+
                 //edit
-                //获得这个user包括id （get user by username ）
+                //获得这个user包括id （get user by username）
+                if(User.userNameExist(conn,newName,newPassword)){
+                    User.userInsert(conn, newName, newPassword);
                 User user = new User();
                 UserProfile.profileInsert(conn, user.getUserId());
                 loginFunction(conn, user);
+                }
             } else if (option.equals("4")) {
                 break;
             } else {
@@ -109,7 +113,7 @@ public class Main {
                         selectRestaurantById(conn,resStringId, true, user);
                     }
                 } else if (optionOne.equals("2")) {
-                    ViewAllRestaurants();
+                    ViewAllRestaurants(conn);
                     System.out.println("1 - choose one restaurant name   2 - return");
                     String optionTwo = Update.getInput();
                     if (optionTwo.equals("1")) {
@@ -185,7 +189,7 @@ public class Main {
                     String address = Update.getInput();
                     UserProfile.editAddress(conn, user.getUserId(), address);
                 } else if (optionReview.equals("4")) {
-                    System.out.println("Please input the new birthday:");
+                    System.out.println("Please input the new birthday(YYYYMMDD):");
                     String birth = Update.getInput();
                     if (checkBirthValid(birth)) {
                         UserProfile.editBirth(conn, user.getUserId(), birth);
@@ -207,24 +211,74 @@ public class Main {
     }
 
     //edit
-    private static String findRestaurantIdByName(Connection conn,String name) {
+    private static String findRestaurantIdByName(Connection conn,String name) throws SQLException {
+        try (CallableStatement statement = conn.prepareCall("{call select_restaurant_id_by_name(?)}");) {
 
+            statement.setString(1, name);
+
+            ResultSet res = statement.executeQuery();
+            if(res.next()) {
+                //System.out.println(res.getString(3));
+
+                if (res.getString(2).equals(name)) {
+                    String res_id= res.getString(1);
+                    statement.close();
+                    return res_id;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return "error";
+        }
         return "No such name.";
     }
 
     //edit
     private static boolean checkBirthValid(String birth) {
+        Integer year=Integer.valueOf(birth.substring(0,4));
+        Integer month= Integer.valueOf(birth.substring(4,6));
+        Integer day=Integer.valueOf(birth.substring(6,8));
+
+        Integer currentYear= Calendar.getInstance().get(Calendar.YEAR);
+        if( month<0 || month>12  || day<0 || day>31 || year>currentYear ) return false;
         return true;
     }
 
     //edit
     private static boolean checkPhoneValid(String phoneNumber) {
+        if(phoneNumber.length()!=10) return false;
         return true;
     }
 
     //edit
-    private static void outputUserProfile(Connection conn, User user) {
-    }
+    private static void outputUserProfile(Connection conn, User user)
+
+        throws SQLException {
+        // edit
+        // can not get user id successfully
+        System.out.println(user.getUserName());
+            try (CallableStatement statement = conn.prepareCall("{call select_profile(?)}");) {
+
+                statement.setInt(1, user.getUserId());
+                ResultSet res = statement.executeQuery();
+                while(res.next()) {
+                    System.out.print("User Id:"+res.getString(1));
+                    System.out.print(" User Firstname:"+res.getString(2));
+                    System.out.print(" User Lastname:"+res.getString(3));
+                    System.out.print(" User Phone Number:"+res.getString(4));
+                    System.out.print(" User Address:"+res.getString(5));
+                    System.out.println(" User Date of Birth:"+res.getString(6));
+                }
+
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return ;
+            }
+
+            return;
+        }
+
+
 
     //edit
     private static void outputUserReviews(Connection conn, User user) {
@@ -263,7 +317,7 @@ public class Main {
                         selectRestaurantById(conn,resStringId, false,null);
                     }
                 } else if (optionOne.equals("2")) {
-                    ViewAllRestaurants();
+                    ViewAllRestaurants(conn);
                     System.out.println("1 - choose one restaurant number   2 - return");
                     String optionTwo = Update.getInput();
                     if (optionTwo.equals("1")) {
@@ -289,8 +343,31 @@ public class Main {
 
     //edit
     //输出所有的restaurants，写一个procedure（看需不需要recursor），调用
-    private static void ViewAllRestaurants() {
+    private static void ViewAllRestaurants(Connection conn) throws SQLException {
+        try (CallableStatement statement = conn.prepareCall("{call select_all_restaurant()}");) {
+
+            ResultSet res = statement.executeQuery();
+            while(res.next()) {
+
+                System.out.print("Restaurant Id:"+res.getString(1));
+                System.out.print(" Restaurant Name:"+res.getString(2));
+                System.out.print(" Restaurant Phone Number:"+res.getString(3));
+                System.out.print(" Restaurant Street Address:"+res.getString(4));
+                System.out.print(" Restaurant City:"+res.getString(5));
+                System.out.print(" Restaurant State:"+res.getString(6));
+                System.out.println(" Restaurant Zip Code:"+res.getString(7));
+            }
+
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ;
+        }
+
+        return;
     }
+
+
 
     //edit
     //选定一个restaurant后，进行的操作,分为login和非login
@@ -523,6 +600,8 @@ public class Main {
         }
         return result;
     }
+
+
 
 
 }

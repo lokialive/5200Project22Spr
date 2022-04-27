@@ -3,6 +3,7 @@ package models;
 
 import java.sql.CallableStatement;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class User {
@@ -36,6 +37,47 @@ public class User {
             e.printStackTrace();
             return false;
         }
+    }
+
+    public static boolean userExist(Connection conn, String name, String password_input)
+            throws SQLException {
+        try (CallableStatement statement = conn.prepareCall("{call select_user_by_name(?)}");) {
+
+            statement.setString(1, name);
+
+            ResultSet res = statement.executeQuery();
+            if(res.next()) {
+                //System.out.println(res.getString(3));
+                if (res.getString(3).equals(password_input)) {
+                    System.out.println("Valid user");
+                    statement.close();
+                    return true;
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+        System.out.println("Invalid user");
+
+        return false;
+    }
+    public static boolean userNameExist(Connection conn, String name, String password_input)
+            throws SQLException {
+        try (CallableStatement statement = conn.prepareCall("{call select_user_by_name(?)}");) {
+            statement.setString(1, name);
+            ResultSet res = statement.executeQuery();
+            if(res.next()) {
+                System.out.println("User name exist, please change another one.");
+                    return false;
+                }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
     }
 
     public int getUserId() {
