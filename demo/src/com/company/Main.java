@@ -42,14 +42,27 @@ public class Main {
                 System.out.println("Please enter password");
                 String password = Update.getInput();
                 boolean login = false;
-                // edit
+                // edit OK
                 // 调用recusor得到结果集，判断是否匹配
                 if(User.userExist(conn,userName,password)) login=true;
 
                 if (login) {
-                    //edit
+                    //edit OK
                     //获得这个user包括id （get user by username ）
                     User user = new User();
+                    try (CallableStatement statement = conn.prepareCall("{call select_user_by_name(?)}");) {
+                        statement.setString(1, userName);
+                        ResultSet res = statement.executeQuery();
+                        if(res.next()) {
+                        user.setUserId(res.getInt(1));
+                        user.setUserName(userName);
+                        user.setPassword(password);
+                        }
+
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+
                     loginFunction(conn, user);
                 } else {
                     System.out.println("Wrong account");
@@ -62,11 +75,23 @@ public class Main {
                 System.out.println("Please enter password");
                 String newPassword = Update.getInput();
 
-                //edit
+                //edit OK
                 //获得这个user包括id （get user by username）
                 if(User.userNameExist(conn,newName,newPassword)){
                     User.userInsert(conn, newName, newPassword);
                 User user = new User();
+                    try (CallableStatement statement = conn.prepareCall("{call select_user_by_name(?)}");) {
+                        statement.setString(1, newName);
+                        ResultSet res = statement.executeQuery();
+                        if(res.next()) {
+                            user.setUserId(res.getInt(1));
+                            user.setUserName(newName);
+                            user.setPassword(newPassword);
+                        }
+
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
                 UserProfile.profileInsert(conn, user.getUserId());
                 loginFunction(conn, user);
                 }
@@ -189,7 +214,7 @@ public class Main {
                     String address = Update.getInput();
                     UserProfile.editAddress(conn, user.getUserId(), address);
                 } else if (optionReview.equals("4")) {
-                    System.out.println("Please input the new birthday(YYYYMMDD):");
+                    System.out.println("Please input the new birthday(YYYY-MM-DD):");
                     String birth = Update.getInput();
                     if (checkBirthValid(birth)) {
                         UserProfile.editBirth(conn, user.getUserId(), birth);
@@ -210,7 +235,7 @@ public class Main {
 
     }
 
-    //edit
+    //edit OK
     private static String findRestaurantIdByName(Connection conn,String name) throws SQLException {
         try (CallableStatement statement = conn.prepareCall("{call select_restaurant_id_by_name(?)}");) {
 
@@ -233,29 +258,32 @@ public class Main {
         return "No such name.";
     }
 
-    //edit
+    //edit OK
     private static boolean checkBirthValid(String birth) {
-        Integer year=Integer.valueOf(birth.substring(0,4));
-        Integer month= Integer.valueOf(birth.substring(4,6));
-        Integer day=Integer.valueOf(birth.substring(6,8));
+//        Integer year=Integer.valueOf(birth.substring(0,4));
+//        Integer month= Integer.valueOf(birth.substring(4,6));
+//        Integer day=Integer.valueOf(birth.substring(6,8));
+                Integer year=Integer.valueOf(birth.substring(0,4));
+        Integer month= Integer.valueOf(birth.substring(5,7));
+        Integer day=Integer.valueOf(birth.substring(8,10));
+
 
         Integer currentYear= Calendar.getInstance().get(Calendar.YEAR);
         if( month<0 || month>12  || day<0 || day>31 || year>currentYear ) return false;
         return true;
     }
 
-    //edit
+    //edit OK
     private static boolean checkPhoneValid(String phoneNumber) {
         if(phoneNumber.length()!=10) return false;
         return true;
     }
 
-    //edit
+
+    //edit OK
     private static void outputUserProfile(Connection conn, User user)
 
         throws SQLException {
-        // edit
-        // can not get user id successfully
         System.out.println(user.getUserName());
             try (CallableStatement statement = conn.prepareCall("{call select_profile(?)}");) {
 
@@ -280,16 +308,54 @@ public class Main {
 
 
 
-    //edit
-    private static void outputUserReviews(Connection conn, User user) {
+    //edit OK
+    private static void outputUserBookmarks(Connection conn, User user) throws SQLException {
+        try (CallableStatement statement = conn.prepareCall("{call select_user_bookmark(?)}");) {
+            statement.setInt(1, user.getUserId());
+            ResultSet res = statement.executeQuery();
+            while(res.next()) {
+
+                System.out.print("Restaurant Id :"+res.getString(3));
+                System.out.print("  Bookmark Description:"+res.getString(4));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ;
+        }
+        return;
     }
 
-    //edit
-    private static void outputUserBookmarks(Connection conn, User user) {
+    //edit OK
+    private static void outputUserOrders(Connection conn, User user)throws SQLException {
+        try (CallableStatement statement = conn.prepareCall("{call select_user_order(?)}");) {
+            statement.setInt(1, user.getUserId());
+            ResultSet res = statement.executeQuery();
+            while(res.next()) {
+                System.out.print("Restaurant Id :"+res.getString(3));
+                System.out.println(" Order Description:"+res.getString(2));
+
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ;
+        }
+        return;
     }
 
-    //edit
-    private static void outputUserOrders(Connection conn, User user) {
+    //edit OK
+    private static void outputUserReviews(Connection conn, User user) throws SQLException {
+        try (CallableStatement statement = conn.prepareCall("{call select_user_review(?)}");) {
+            statement.setInt(1, user.getUserId());
+            ResultSet res = statement.executeQuery();
+            while(res.next()) {
+                System.out.print("Review Content:"+res.getString(3));
+                System.out.print(" Restaurant Id :"+res.getString(4));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ;
+        }
+        return;
     }
 
     private static void guestFunction(Connection conn) throws IOException, SQLException {
@@ -341,7 +407,7 @@ public class Main {
 
     }
 
-    //edit
+    //edit OK
     //输出所有的restaurants，写一个procedure（看需不需要recursor），调用
     private static void ViewAllRestaurants(Connection conn) throws SQLException {
         try (CallableStatement statement = conn.prepareCall("{call select_all_restaurant()}");) {
@@ -397,7 +463,7 @@ public class Main {
                 "1 - view menu   2 - order(only login user)  3 - review   4 - bookmark(only login user)   5 - quit");
             String option = Update.getInput();
             if (option.equals("1")) {
-                outputMenuByRestaurantId(restaurantId);
+                outputMenuByRestaurantId(conn,restaurantId);
             } else if (option.equals("2")) {
                 if (!login) {
                     System.out.println("This function is only available for login user");
@@ -418,11 +484,11 @@ public class Main {
                     }
                 }
             } else if (option.equals("3")) {
-                outputReviewsByRestaurantId(restaurantId);
+                outputReviewsByRestaurantId(conn,restaurantId);
                 // Login user
                 if (login) {
                     System.out.println("These reviews are written by you:");
-                    outputReviewByUserAndRestaurant(restaurantId, userId);
+                    outputReviewByUserAndRestaurant(conn,restaurantId, userId);
                     System.out.println("1 - add review  2- delete review  3- edit review ");
                     String optionReview = Update.getInput();
                     if (optionReview.equals("1")) {
@@ -445,7 +511,10 @@ public class Main {
                     //bookmark login
                     outputBookmarkByUserAndRestaurant(conn,userId,restaurantId);
                 }
-            } else {
+            }else if (option.equals("5")){
+                break;
+            }
+            else {
                 System.out.println("Invalid output!");
             }
         }
@@ -455,17 +524,27 @@ public class Main {
     private static void outputBookmarkByUserAndRestaurant(Connection conn, int userId, int restaurantId)
         throws IOException, SQLException {
 
-        boolean hasBookmark = true;
-        //edit output bookmark result
-        //...
+        boolean hasBookmark =false ;
+        try (CallableStatement statement = conn.prepareCall("{call select_user_bookmark(?)}");) {
+            statement.setInt(1, userId);
+            ResultSet res = statement.executeQuery();
+            while (res.next()) {
+
+                if (res.getString(3).equals(restaurantId))
+                    hasBookmark= true;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
         if(hasBookmark){
-            System.out.println("Do you want to delete it? y/n");
+            System.out.println("You have this restaurant bookmarked, do you want to delete it? y/n");
             String option = Update.getInput();
             if(option.equals("y")){
                 deleteBookmark(conn,userId);
             }
         }else{
-            System.out.println("Do you want to add a bookmark? y/n");
+            System.out.println("DYou have not mark this restaurant, do you want to add a bookmark? y/n");
             String option = Update.getInput();
             if(option.equals("y")){
                 System.out.println("Please input bookmark description:");
@@ -475,16 +554,58 @@ public class Main {
         }
     }
 
-    //edit
-    private static void outputReviewByUserAndRestaurant(int restaurantId, int userId) {
+    //edit OK
+    private static void outputReviewByUserAndRestaurant(Connection conn,int restaurantId, int userId)  throws SQLException {
+        try (CallableStatement statement = conn.prepareCall("{call select_restaurant_review(?)}");) {
+            statement.setInt(1, restaurantId);
+            ResultSet res = statement.executeQuery();
+            while(res.next()) {
+                if(res.getInt(2)==userId) {
+                System.out.print("Restaurant Id:"+res.getString(1));
+                System.out.println(" Review Content:"+res.getString(3));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ;
+        }
+        return;
     }
 
-    //edit
-    private static void outputReviewsByRestaurantId(int restaurantId) {
+    //edit OK
+    private static void outputMenuByRestaurantId(Connection conn, int restaurantId) throws SQLException {
+        try (CallableStatement statement = conn.prepareCall("{call select_restaurant_menu(?)}");) {
+            statement.setInt(1, restaurantId);
+            ResultSet res = statement.executeQuery();
+            while(res.next()) {
+                System.out.print("Menu Name:"+res.getString(2));
+                System.out.print(" Menu Description:"+res.getString(3));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ;
+        }
+        return;
     }
 
-    //edit
-    private static void outputMenuByRestaurantId(int restaurantId) {
+    //edit OK
+    private static void outputReviewsByRestaurantId(Connection conn,int restaurantId)throws SQLException {
+        try (CallableStatement statement = conn.prepareCall("{call select_restaurant_review(?)}");) {
+            statement.setInt(1, restaurantId);
+            ResultSet res = statement.executeQuery();
+            while(res.next()) {
+
+                System.out.print("Restaurant Id:"+res.getString(1));
+                System.out.print(" User Id:"+res.getString(2));
+                System.out.println(" Review Content:"+res.getString(3));
+
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ;
+        }
+
+        return;
     }
 
 
@@ -499,8 +620,19 @@ public class Main {
     }
 
     //edit ：check number在不在askid的reviewid里面
-    private static boolean checkPermitReview(Connection conn,int askId, String number) {
-        return true;
+    private static boolean checkPermitReview(Connection conn,int askId, String number) throws SQLException {
+        try (CallableStatement statement = conn.prepareCall("{call select_user_review(?)}");) {
+            statement.setInt(1, askId);
+            ResultSet res = statement.executeQuery();
+            while (res.next()) {
+                if (res.getString(1).equals(number))
+                    return true;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false ;
+        }
+        return false;
     }
 
     public static void deleteReview(Connection conn,int askId) throws SQLException, IOException {
@@ -508,6 +640,8 @@ public class Main {
         String number = Update.getInput();
         if(checkPermitReview(conn,askId,number)) {
             Review.delete(conn, Integer.parseInt(number));
+        }else{
+            System.out.println("You do not have this review.");
         }
     }
 
@@ -516,12 +650,25 @@ public class Main {
         String number = Update.getInput();
         if(checkPermitBookmark(conn,askId,number)) {
             Bookmark.delete(conn, Integer.parseInt(number));
+        }else{
+            System.out.println("You do not have this bookmark.");
         }
     }
 
     //edit ：check number在不在askid的bookmarkid里面
-    private static boolean checkPermitBookmark(Connection conn, int askId, String number) {
-        return true;
+    private static boolean checkPermitBookmark(Connection conn, int askId, String number) throws SQLException {
+            try (CallableStatement statement = conn.prepareCall("{call select_user_bookmark(?)}");) {
+                statement.setInt(1, askId);
+                ResultSet res = statement.executeQuery();
+                while (res.next()) {
+                    if (res.getString(1).equals(number))
+                        return true;
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return false ;
+            }
+            return false;
     }
 
     private static void deleteOrder(Connection conn,int askId) throws IOException, SQLException {
@@ -529,12 +676,25 @@ public class Main {
         String number = Update.getInput();
         if(checkPermitOrder(conn,askId,number)) {
             Order.delete(conn, Integer.parseInt(number));
+        }else{
+            System.out.println("You do not have this order.");
         }
     }
 
     //edit ：check number在不在askid的orderid里面
-    private static boolean checkPermitOrder(Connection conn, int askId, String number) {
-        return true;
+    private static boolean checkPermitOrder(Connection conn, int askId, String number) throws SQLException {
+        try (CallableStatement statement = conn.prepareCall("{call select_user_order(?)}");) {
+            statement.setInt(1, askId);
+            ResultSet res = statement.executeQuery();
+            while (res.next()) {
+                if (res.getString(1).equals(number))
+                    return true;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false ;
+        }
+        return false;
     }
 
 

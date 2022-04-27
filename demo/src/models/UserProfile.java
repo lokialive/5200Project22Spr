@@ -4,6 +4,8 @@ package models;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Types;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -37,8 +39,13 @@ public class UserProfile {
     }
 
     public static boolean profileInsert(Connection conn, int userId) throws SQLException {
-        try (CallableStatement statement = conn.prepareCall("{call insert_profile(?)}");) {
+        try (CallableStatement statement = conn.prepareCall("{call insert_profile(?,?,?,?,?,?)}");) {
             statement.setInt(1, userId);
+            statement.setNull(2, Types.VARCHAR);
+            statement.setNull(3, Types.VARCHAR);
+            statement.setNull(4, Types.VARCHAR);
+            statement.setNull(5, Types.VARCHAR);
+            statement.setNull(6, Types.VARCHAR);
             statement.execute();
             statement.close();
 
@@ -101,17 +108,20 @@ public class UserProfile {
         }
     }
 
+// TODO
     public static boolean editBirth(Connection conn, int userId, String birth) throws SQLException {
         try (CallableStatement statement = conn.prepareCall("{call edit_profile_birth(?,?)}");) {
 
             statement.setInt(1, userId);
-            SimpleDateFormat formatter = new SimpleDateFormat("MM-dd-yyyy");
-            statement.setString(2, formatter.format(birth));
+//            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+//            Date temp = formatter.parse(birth);
+            statement.setDate(2, java.sql.Date.valueOf(birth) );
             statement.execute();
             statement.close();
             System.out.println("Edit profile birth procedure called successfully!");
             return true;
-        } catch (SQLException e) {
+//        } catch (SQLException | ParseException e) {
+        } catch (SQLException  e) {
             e.printStackTrace();
             return false;
         }
