@@ -529,13 +529,13 @@ public class Main {
             statement.setInt(1, userId);
             ResultSet res = statement.executeQuery();
             while (res.next()) {
-
-                if (res.getString(3).equals(restaurantId))
+                if (res.getInt(3)==(restaurantId))
                     hasBookmark= true;
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        System.out.println(hasBookmark);
 
         if(hasBookmark){
             System.out.println("You have this restaurant bookmarked, do you want to delete it? y/n");
@@ -544,7 +544,7 @@ public class Main {
                 deleteBookmark(conn,userId);
             }
         }else{
-            System.out.println("DYou have not mark this restaurant, do you want to add a bookmark? y/n");
+            System.out.println("You have not mark this restaurant, do you want to add a bookmark? y/n");
             String option = Update.getInput();
             if(option.equals("y")){
                 System.out.println("Please input bookmark description:");
@@ -579,7 +579,7 @@ public class Main {
             ResultSet res = statement.executeQuery();
             while(res.next()) {
                 System.out.print("Menu Name:"+res.getString(2));
-                System.out.print(" Menu Description:"+res.getString(3));
+                System.out.println(" Menu Description:"+res.getString(3));
             }
         } catch (SQLException e) {
             e.printStackTrace();
