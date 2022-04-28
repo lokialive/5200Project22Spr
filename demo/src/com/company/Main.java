@@ -139,7 +139,7 @@ public class Main {
                     }
                 } else if (optionOne.equals("2")) {
                     ViewAllRestaurants(conn);
-                    System.out.println("1 - choose one restaurant name   2 - return");
+                    System.out.println("1 - choose one restaurant number   2 - return");
                     String optionTwo = Update.getInput();
                     if (optionTwo.equals("1")) {
                         System.out.println("Please input the selected restaurant id:");
@@ -554,13 +554,13 @@ public class Main {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        System.out.println(hasBookmark);
+        // System.out.println(hasBookmark);
 
         if(hasBookmark){
             System.out.println("You have this restaurant bookmarked, do you want to delete it? y/n");
             String option = Update.getInput();
             if(option.equals("y")){
-                deleteBookmark(conn,userId);
+                Bookmark.deleteExact(conn,restaurantId,userId);
             }
         }else{
             System.out.println("You have not mark this restaurant, do you want to add a bookmark? y/n");
@@ -673,6 +673,7 @@ public class Main {
             System.out.println("You do not have this bookmark.");
         }
     }
+
 
     //edit ：check number在不在askid的bookmarkid里面
     private static boolean checkPermitBookmark(Connection conn, int askId, String number) throws SQLException {

@@ -57,6 +57,21 @@ public class Bookmark {
         }
     }
 
+    public static boolean deleteExact(Connection conn, int restaurantId, int userId) throws SQLException {
+        try (CallableStatement statement = conn.prepareCall("{call delete_exact_bookmark(?,?)}");) {
+            statement.setInt(1, userId);
+            statement.setInt(2, restaurantId);
+            statement.execute();
+            statement.close();
+            System.out.println("Delete bookmark procedure called successfully!");
+            return true;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public int getBookmarkId() {
         return bookmarkId;
     }
