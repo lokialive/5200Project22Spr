@@ -469,6 +469,8 @@ public class Main {
                     System.out.println("This function is only available for login user");
                 } else {
                     //order login
+                    System.out.println("There are your orders in this restaurant:");
+                    outputOrderByUserAndRestaurant(conn,userId,restaurantId);
                     System.out.println("1 - Create new order    2 - delete exist order   3 - return");
                     String optionOrder = Update.getInput();
                     if(optionOrder.equals("1")){
@@ -484,6 +486,7 @@ public class Main {
                     }
                 }
             } else if (option.equals("3")) {
+                System.out.println("There are the reviews for this restaurant:");
                 outputReviewsByRestaurantId(conn,restaurantId);
                 // Login user
                 if (login) {
@@ -520,7 +523,23 @@ public class Main {
         }
     }
 
-
+    private static void outputOrderByUserAndRestaurant(Connection conn, int userId, int restaurantId)
+            throws IOException, SQLException {
+        try (CallableStatement statement = conn.prepareCall("{call select_restaurant_order(?)}");) {
+            statement.setInt(1, restaurantId);
+            ResultSet res = statement.executeQuery();
+            while(res.next()) {
+                if(res.getInt(4)==userId) {
+                    System.out.print("Order Id:"+res.getString(1));
+                    System.out.println(" Order Description:"+res.getString(2));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ;
+        }
+        return;
+    }
     private static void outputBookmarkByUserAndRestaurant(Connection conn, int userId, int restaurantId)
         throws IOException, SQLException {
 
@@ -672,7 +691,9 @@ public class Main {
     }
 
     private static void deleteOrder(Connection conn,int askId) throws IOException, SQLException {
+
         System.out.println("Please input the order number you want to delete:");
+
         String number = Update.getInput();
         if(checkPermitOrder(conn,askId,number)) {
             Order.delete(conn, Integer.parseInt(number));
