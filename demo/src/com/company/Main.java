@@ -126,18 +126,9 @@ public class Main {
             if (option.equals("0")) {
                 break;
             } else if (option.equals("1")) {
-                System.out.println("1 - select restaurant by name   2 - View all restaurants");
+                System.out.println("1 - View all restaurants");
                 String optionOne = Update.getInput();
                 if (optionOne.equals("1")) {
-                    System.out.println("Please input restaurant name:");
-                    String name = Update.getInput();
-                    String resStringId = findRestaurantIdByName(conn,name);
-                    if (resStringId.equals("No such name.")) {
-                        System.out.println("There is no restaurant matched.");
-                    } else {
-                        selectRestaurantById(conn,resStringId, true, user);
-                    }
-                } else if (optionOne.equals("2")) {
                     ViewAllRestaurants(conn);
                     System.out.println("1 - choose one restaurant number   2 - return");
                     String optionTwo = Update.getInput();
@@ -146,7 +137,7 @@ public class Main {
                         String resStringId = Update.getInput();
                         selectRestaurantById(conn,resStringId, true, user);
                     } else if (optionTwo.equals("2")) {
-                        break;
+                        continue;
                     } else {
                         System.out.println("Invalid Input!");
                     }
@@ -154,6 +145,7 @@ public class Main {
                     System.out.println("Invalid Input!");
                 }
             } else if (option.equals("2")) {
+                System.out.println("The orders you have");
                 outputUserOrders(conn, user);
                 System.out.println("1-delete an order   2- return");
                 String optionOrder = Update.getInput();
@@ -166,8 +158,10 @@ public class Main {
                 }
 
             } else if (option.equals("3")) {
+                System.out.println("The restaurants you have bookmarked:");
                 outputUserBookmarks(conn, user);
-                System.out.println("1-delete a bookmark   2- return");
+                System.out.println("\n" +
+                        "1-delete a bookmark   2- return");
                 String optionBookmark = Update.getInput();
                 if (optionBookmark.equals("1")) {
                     deleteBookmark(conn, user.getUserId());
@@ -177,8 +171,9 @@ public class Main {
                     System.out.println("Invalid input!");
                 }
             } else if (option.equals("4")) {
+                System.out.println("The reviews you have made:");
                 outputUserReviews(conn, user);
-                System.out.println("1-delete a review  2 - edit a review  3 - return");
+                System.out.println("\n" + "1-delete a review  2 - edit a review  3 - return");
                 String optionReview = Update.getInput();
                 if (optionReview.equals("1")) {
                     deleteReview(conn,user.getUserId());
@@ -201,11 +196,13 @@ public class Main {
                     System.out.println("Please input first name:");
                     String firstname = Update.getInput();
                     UserProfile.editName(conn, user.getUserId(), lastname, firstname);
+                    continue;
                 } else if (optionReview.equals("2")) {
                     System.out.println("Please input the new phone number:");
                     String phoneNumber = Update.getInput();
                     if (checkPhoneValid(phoneNumber)) {
                         UserProfile.editPhone(conn, user.getUserId(), phoneNumber);
+                        continue;
                     } else {
                         System.out.println("phone number inout is not valid");
                     }
@@ -314,9 +311,9 @@ public class Main {
             statement.setInt(1, user.getUserId());
             ResultSet res = statement.executeQuery();
             while(res.next()) {
-
-                System.out.print("Restaurant Id :"+res.getString(3));
-                System.out.print("  Bookmark Description:"+res.getString(4));
+                System.out.print("Bookmark Id :"+ res.getString(1));
+                System.out.print("    Restaurant Id :"+res.getString(3));
+                System.out.print("    Bookmark Description:"+res.getString(4));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -331,8 +328,9 @@ public class Main {
             statement.setInt(1, user.getUserId());
             ResultSet res = statement.executeQuery();
             while(res.next()) {
-                System.out.print("Restaurant Id :"+res.getString(3));
-                System.out.println(" Order Description:"+res.getString(2));
+                System.out.print("Order Id :"+ res.getString(1));
+                System.out.print("    Restaurant Id :"+res.getString(3));
+                System.out.println("  Order Description:"+res.getString(2));
 
             }
         } catch (SQLException e) {
@@ -348,8 +346,9 @@ public class Main {
             statement.setInt(1, user.getUserId());
             ResultSet res = statement.executeQuery();
             while(res.next()) {
-                System.out.print("Review Content:"+res.getString(3));
-                System.out.print(" Restaurant Id :"+res.getString(4));
+                System.out.print("Review Id :"+ res.getString(1));
+                System.out.print("    Review Content:"+res.getString(3));
+                System.out.print("    Restaurant Id :"+res.getString(4));
             }
         } catch (SQLException e) {
             e.printStackTrace();
