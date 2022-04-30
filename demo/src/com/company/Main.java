@@ -602,7 +602,7 @@ public class Main {
             ResultSet res = statement.executeQuery();
             while (res.next()) {
                 if (res.getInt(2) == userId) {
-                    System.out.print("Restaurant Id:" + res.getString(1));
+                    System.out.print("Review Id:" + res.getString(1));
                     System.out.println(" Review Content:" + res.getString(3));
                 }
             }
